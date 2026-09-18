@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Laporan Penjualan</title>
+    <title>Sistem Laporan Penjualan (Tabel Portal)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -20,12 +20,12 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-slate-900 leading-tight">Sales Analytics</h1>
-                    <p class="text-xs text-slate-500">Sistem Rekapitulasi Penjualan Harian</p>
+                    <h1 class="text-xl font-bold text-slate-900 leading-tight">Sales Analytics (Tabel)</h1>
+                    <p class="text-xs text-slate-500">Portal Laporan Penjualan Harian - /tabel</p>
                 </div>
             </div>
-            <div class="text-xs font-semibold px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg border border-slate-200">
-                v2.0 System Active
+            <div class="text-xs font-semibold px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-200">
+                Portal /tabel Active
             </div>
         </div>
     </header>
@@ -48,7 +48,7 @@
                     <p class="text-xs text-slate-500 mt-0.5">Tentukan tanggal transaksi untuk menampilkan tabel data rekapitulasi.</p>
                 </div>
                 
-                <form action="{{ route('sales.index') }}" method="GET" class="flex flex-wrap items-center gap-3">
+                <form action="{{ route('tabel.index') }}" method="GET" class="flex flex-wrap items-center gap-3">
                     <div class="relative">
                         <input type="date" name="date" value="{{ $date }}" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 font-medium outline-none transition" required>
                     </div>
@@ -59,19 +59,19 @@
                     </button>
                     
                     @if($date)
-                        <a href="{{ route('sales.index') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-semibold rounded-xl transition text-center">
+                        <a href="{{ route('tabel.index') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-semibold rounded-xl transition text-center">
                             Reset
                         </a>
                     @endif
                 </form>
             </div>
 
-            <!-- FITUR BARU: DAFTAR TANGGAL TERSEDIA -->
+            <!-- DAFTAR TANGGAL TERSEDIA -->
             <div class="pt-4 border-t border-slate-100">
                 <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">🔍 Tanggal Tersedia Yang Memiliki Transaksi:</span>
                 <div class="flex flex-wrap gap-2">
                     @forelse($availableDates as $item)
-                        <a href="{{ route('sales.index', ['date' => $item->date]) }}" 
+                        <a href="{{ route('tabel.index', ['date' => $item->date]) }}" 
                            class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-medium border transition-all {{ $date == $item->date ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200' }}">
                             📅 {{ date('d M Y', strtotime($item->date)) }}
                             <span class="ml-2 bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-md text-[10px] font-bold {{ $date == $item->date ? 'bg-white text-indigo-700' : '' }}">

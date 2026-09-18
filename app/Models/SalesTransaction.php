@@ -13,6 +13,7 @@ class SalesTransaction extends Model
         'product_id',
         'payment_type',
         'qty',
+        'transaction_date',
     ];
 
     public function product()
