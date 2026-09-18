@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Product;
 use App\Models\SalesReport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -111,5 +112,40 @@ test('user can delete a sales report', function () {
 
     $this->assertDatabaseMissing('sales_reports', [
         'id' => $report->id,
+    ]);
+});
+
+test('tabel portal page (laporan 2) renders successfully', function () {
+    $response = $this->get(route('tabel.index'));
+
+    $response->assertOk();
+    $response->assertSee('Sales Analytics (Laporan 2)');
+    $response->assertSee('/tabel');
+});
+
+test('user can add product and transaction in tabel portal', function () {
+    // 1. Tambah master produk
+    $prodResponse = $this->post(route('tabel.product.store'), [
+        'name' => 'Monitor Gaming 24 Inch',
+    ]);
+    $prodResponse->assertSessionHas('success');
+    $this->assertDatabaseHas('products', ['name' => 'Monitor Gaming 24 Inch']);
+
+    $product = Product::where('name', 'Monitor Gaming 24 Inch')->first();
+
+    // 2. Simpan transaksi
+    $txResponse = $this->post(route('tabel.transaction.store'), [
+        'product_id' => $product->id,
+        'transaction_date' => '2026-09-18',
+        'payment_type' => 'cash',
+        'qty' => 3,
+    ]);
+    $txResponse->assertRedirect(route('tabel.index', ['date' => '2026-09-18']));
+
+    $this->assertDatabaseHas('sales_transactions', [
+        'product_id' => $product->id,
+        'transaction_date' => '2026-09-18',
+        'payment_type' => 'cash',
+        'qty' => 3,
     ]);
 });

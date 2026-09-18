@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->enum('payment_type', ['cash', 'kredit', 'instansi']);
             $table->integer('qty');
-            $table->date('transaction_date');
             $table->timestamps();
         });
     }
