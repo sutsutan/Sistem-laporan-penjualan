@@ -8,6 +8,70 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+
+        /* ===== RESPONSIVE TABLE (Card Layout on Mobile) ===== */
+        @media (max-width: 767px) {
+            .resp-table thead {
+                display: none;
+            }
+            .resp-table tbody tr {
+                display: block;
+                margin-bottom: 1rem;
+                border: 1px solid #e2e8f0;
+                border-radius: 1rem;
+                overflow: hidden;
+                background: #fff;
+                box-shadow: 0 1px 4px 0 rgba(0,0,0,.06);
+            }
+            .resp-table tbody tr:hover {
+                background: #f8fafc;
+            }
+            .resp-table tbody td {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0.65rem 1rem;
+                border-bottom: 1px solid #f1f5f9;
+                font-size: 0.875rem;
+                text-align: right;
+            }
+            .resp-table tbody td:last-child {
+                border-bottom: none;
+            }
+            .resp-table tbody td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #64748b;
+                text-align: left;
+                flex-shrink: 0;
+                margin-right: 0.75rem;
+            }
+            /* Aksi kolom: stack tombol vertikal */
+            .resp-table tbody td.td-aksi {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .resp-table tbody td.td-aksi::before {
+                margin-bottom: 0.25rem;
+            }
+            .resp-table tbody td.td-aksi .aksi-wrap {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                width: 100%;
+            }
+            /* Total terjual baris highlight */
+            .resp-table tbody td.td-total {
+                background: #f8fafc;
+                font-weight: 700;
+                font-size: 1rem;
+                color: #0f172a;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-12">
@@ -114,7 +178,7 @@
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-600">
+                    <table class="resp-table w-full text-left text-sm text-slate-600">
                         <thead class="bg-slate-50 text-xs uppercase font-bold text-slate-500 border-b border-slate-100">
                             <tr>
                                 <th scope="col" class="px-6 py-4">Nama Produk</th>
@@ -122,29 +186,29 @@
                                 <th scope="col" class="px-6 py-4 text-center">Qty Kredit</th>
                                 <th scope="col" class="px-6 py-4 text-center">Qty Instansi</th>
                                 <th scope="col" class="px-6 py-4 text-center bg-slate-100/70 text-slate-800">Total Terjual</th>
-                                <th scope="col" class="px-6 py-4 text-center">Aksi Management</th>
+                                <th scope="col" class="px-6 py-4 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse($products as $p)
                             <tr class="hover:bg-slate-50/80 transition-colors">
-                                <td class="px-6 py-4 font-semibold text-slate-900">
+                                <td data-label="Nama Produk" class="px-6 py-4 font-semibold text-slate-900">
                                     {{ $p->name }}
                                 </td>
-                                <td class="px-6 py-4 text-center font-bold text-emerald-600">
+                                <td data-label="Qty Cash" class="px-6 py-4 text-center font-bold text-emerald-600">
                                     <span class="inline-block bg-emerald-50 px-2.5 py-1 rounded-lg">{{ $p->total_cash }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-center font-bold text-amber-600">
+                                <td data-label="Qty Kredit" class="px-6 py-4 text-center font-bold text-amber-600">
                                     <span class="inline-block bg-amber-50 px-2.5 py-1 rounded-lg">{{ $p->total_kredit }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-center font-bold text-sky-600">
+                                <td data-label="Qty Instansi" class="px-6 py-4 text-center font-bold text-sky-600">
                                     <span class="inline-block bg-sky-50 px-2.5 py-1 rounded-lg">{{ $p->total_instansi }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-center font-bold text-slate-900 bg-slate-50/50">
+                                <td data-label="Total Terjual" class="td-total px-6 py-4 text-center font-bold text-slate-900 bg-slate-50/50">
                                     <span class="text-base">{{ $p->total_cash + $p->total_kredit + $p->total_instansi }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-center">
-                                    <div class="flex items-center justify-center space-x-2">
+                                <td data-label="Aksi" class="td-aksi px-6 py-4 text-center">
+                                    <div class="aksi-wrap flex items-center justify-center space-x-2">
                                         <!-- Edit Button -->
                                         <button onclick="openEditModal({{ $p->id }}, '{{ addslashes($p->name) }}')" class="inline-flex items-center px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-medium transition shadow-sm active:scale-95">
                                             <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
