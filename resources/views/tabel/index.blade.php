@@ -1,1 +1,0 @@
-@include('tabel.laporan2')

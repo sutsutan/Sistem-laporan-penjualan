@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('sales_transactions', 'transaction_date')) {
+        if (! Schema::hasColumn('sales_transactions', 'transaction_date')) {
             Schema::table('sales_transactions', function (Blueprint $table) {
                 $table->date('transaction_date')->nullable()->after('qty');
             });

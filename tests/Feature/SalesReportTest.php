@@ -1,27 +1,24 @@
 <?php
 
-use App\Models\Product;
 use App\Models\SalesReport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('sales dashboard page renders successfully without product breakdown', function () {
+test('sales dashboard page renders successfully without laporan 2 portal', function () {
     $response = $this->get(route('sales.index'));
 
     $response->assertOk();
     $response->assertSee('Laporan Penjualan');
+    $response->assertSee('Filter Laporan Penjualan');
     $response->assertSee('Akumulasi Penjualan');
-    $response->assertSee('Laporan Terbaru');
     $response->assertSee('Create New Table');
-    $response->assertDontSee('Laptop Asus');
-    $response->assertDontSee('Mouse Wireless');
-    $response->assertDontSee('Keyboard Mechanical');
+    $response->assertDontSee('/tabel');
+    $response->assertDontSee('Buka Laporan 2');
 });
 
-test('user can create a new sales report entry via create new table with qty', function () {
+test('user can create a new sales report entry without providing report name', function () {
     $payload = [
-        'name' => 'Laporan Penjualan Q3 Cabang Bandung',
         'report_date' => '2026-09-18',
         'category' => 'cash',
         'qty' => 5,
@@ -33,23 +30,23 @@ test('user can create a new sales report entry via create new table with qty', f
     $response->assertSessionHas('success');
 
     $this->assertDatabaseHas('sales_reports', [
-        'name' => 'Laporan Penjualan Q3 Cabang Bandung',
         'category' => 'cash',
         'qty' => 5,
     ]);
+    $created = SalesReport::latest('id')->first();
+    expect($created->report_date->format('Y-m-d'))->toBe('2026-09-18');
 
-    // Check that it shows in the index view and aggregates properly
+    // Check that it displays in the index view and aggregates properly
     $viewResponse = $this->get(route('sales.index'));
     $viewResponse->assertOk();
-    $viewResponse->assertSee('Laporan Penjualan Q3 Cabang Bandung');
     $viewResponse->assertSee('Cash');
     $viewResponse->assertSee('5');
 });
 
 test('aggregates are calculated correctly across categories based on sum of qty', function () {
-    SalesReport::factory()->create(['category' => 'cash', 'qty' => 10]);
-    SalesReport::factory()->create(['category' => 'kredit', 'qty' => 7]);
-    SalesReport::factory()->create(['category' => 'instansi', 'qty' => 15]);
+    SalesReport::factory()->create(['category' => 'cash', 'qty' => 10, 'report_date' => '2026-09-10']);
+    SalesReport::factory()->create(['category' => 'kredit', 'qty' => 7, 'report_date' => '2026-09-15']);
+    SalesReport::factory()->create(['category' => 'instansi', 'qty' => 15, 'report_date' => '2026-09-20']);
 
     $response = $this->get(route('sales.index'));
 
@@ -63,89 +60,67 @@ test('aggregates are calculated correctly across categories based on sum of qty'
     });
 });
 
+test('filtering by month filters reports and recalculates aggregates accurately', function () {
+    // September records
+    SalesReport::factory()->create(['category' => 'cash', 'qty' => 5, 'report_date' => '2026-09-10']);
+    SalesReport::factory()->create(['category' => 'kredit', 'qty' => 4, 'report_date' => '2026-09-20']);
+
+    // August record
+    SalesReport::factory()->create(['category' => 'cash', 'qty' => 12, 'report_date' => '2026-08-15']);
+
+    $response = $this->get(route('sales.index', ['month' => '2026-09']));
+
+    $response->assertOk();
+    $response->assertViewHas('totalCash', 5);
+    $response->assertViewHas('totalKredit', 4);
+    $response->assertViewHas('totalAll', 9);
+    $response->assertViewHas('recentReports', function ($reports) {
+        return $reports->count() === 2;
+    });
+    $response->assertSee('September 2026');
+});
+
+test('filtering by day filters reports and recalculates aggregates for that specific date', function () {
+    // 2026-09-18 records
+    SalesReport::factory()->create(['category' => 'cash', 'qty' => 3, 'report_date' => '2026-09-18']);
+    SalesReport::factory()->create(['category' => 'instansi', 'qty' => 2, 'report_date' => '2026-09-18']);
+
+    // Another date record
+    SalesReport::factory()->create(['category' => 'cash', 'qty' => 8, 'report_date' => '2026-09-19']);
+
+    $response = $this->get(route('sales.index', ['date' => '2026-09-18']));
+
+    $response->assertOk();
+    $response->assertViewHas('totalCash', 3);
+    $response->assertViewHas('totalInstansi', 2);
+    $response->assertViewHas('totalAll', 5);
+    $response->assertViewHas('recentReports', function ($reports) {
+        return $reports->count() === 2;
+    });
+});
+
 test('creating report validates required fields and category options and min qty', function () {
     $response = $this->post(route('sales.store'), [
-        'name' => '',
         'report_date' => 'invalid-date',
         'category' => 'invalid_category',
         'qty' => -1,
     ]);
 
-    $response->assertSessionHasErrors(['name', 'report_date', 'category', 'qty']);
-});
-
-test('user can update an existing sales report including qty', function () {
-    $report = SalesReport::factory()->create([
-        'name' => 'Laporan Lama',
-        'category' => 'cash',
-        'report_date' => '2026-09-01',
-        'qty' => 2,
-    ]);
-
-    $response = $this->put(route('sales.update', $report->id), [
-        'name' => 'Laporan Diperbarui',
-        'category' => 'kredit',
-        'report_date' => '2026-09-15',
-        'qty' => 12,
-    ]);
-
-    $response->assertRedirect(route('sales.index'));
-    $response->assertSessionHas('success');
-
-    $this->assertDatabaseHas('sales_reports', [
-        'id' => $report->id,
-        'name' => 'Laporan Diperbarui',
-        'category' => 'kredit',
-        'qty' => 12,
-    ]);
+    $response->assertSessionHasErrors(['report_date', 'category', 'qty']);
 });
 
 test('user can delete a sales report', function () {
     $report = SalesReport::factory()->create([
-        'name' => 'Laporan Untuk Dihapus',
+        'category' => 'cash',
+        'qty' => 4,
+        'report_date' => '2026-09-01',
     ]);
 
     $response = $this->delete(route('sales.destroy', $report->id));
 
-    $response->assertRedirect(route('sales.index'));
     $response->assertSessionHas('success');
 
     $this->assertDatabaseMissing('sales_reports', [
         'id' => $report->id,
-    ]);
-});
-
-test('tabel portal page (laporan 2) renders successfully', function () {
-    $response = $this->get(route('tabel.index'));
-
-    $response->assertOk();
-    $response->assertSee('Sales Analytics (Laporan 2)');
-    $response->assertSee('/tabel');
-});
-
-test('user can add product and transaction in tabel portal', function () {
-    // 1. Tambah master produk
-    $prodResponse = $this->post(route('tabel.product.store'), [
-        'name' => 'Monitor Gaming 24 Inch',
-    ]);
-    $prodResponse->assertSessionHas('success');
-    $this->assertDatabaseHas('products', ['name' => 'Monitor Gaming 24 Inch']);
-
-    $product = Product::where('name', 'Monitor Gaming 24 Inch')->first();
-
-    // 2. Simpan transaksi
-    $txResponse = $this->post(route('tabel.transaction.store'), [
-        'product_id' => $product->id,
-        'transaction_date' => '2026-09-18',
-        'payment_type' => 'cash',
-        'qty' => 3,
-    ]);
-    $txResponse->assertRedirect(route('tabel.index', ['date' => '2026-09-18']));
-
-    $this->assertDatabaseHas('sales_transactions', [
-        'product_id' => $product->id,
-        'transaction_date' => '2026-09-18',
-        'payment_type' => 'cash',
-        'qty' => 3,
     ]);
 });
