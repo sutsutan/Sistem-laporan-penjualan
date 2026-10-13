@@ -1,9 +1,14 @@
 <?php
 
 use App\Models\SalesReport;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->actingAs(User::factory()->create());
+});
 
 test('sales dashboard page renders successfully without laporan 2 portal', function () {
     $response = $this->get(route('sales.index'));

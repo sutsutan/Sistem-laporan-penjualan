@@ -15,11 +15,44 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Akun Administrator
+        User::updateOrCreate(
+            ['email' => 'admin@laporan.com'],
+            [
+                'name' => 'Administrator',
+                'password' => bcrypt('admin123'),
+                'role' => 'admin',
+                'is_active' => true,
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Akun Staff
+        User::updateOrCreate(
+            ['email' => 'staff@laporan.com'],
+            [
+                'name' => 'Staff Penjualan',
+                'password' => bcrypt('staff123'),
+                'role' => 'staff',
+                'is_active' => true,
+            ]
+        );
+
+        // Akun Contoh Nonaktif (Hanya orang tertentu yang aktif yang bisa login)
+        User::updateOrCreate(
+            ['email' => 'nonaktif@laporan.com'],
+            [
+                'name' => 'User Nonaktif',
+                'password' => bcrypt('staff123'),
+                'role' => 'staff',
+                'is_active' => false,
+            ]
+        );
+
+        // Perbarui test@example.com yang sudah ada jika ada di database
+        User::where('email', 'test@example.com')->update([
+            'password' => bcrypt('admin123'),
+            'role' => 'admin',
+            'is_active' => true,
         ]);
 
         $this->call([
