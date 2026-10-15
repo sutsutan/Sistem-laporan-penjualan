@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -153,4 +154,58 @@ test('admin can delete another user', function () {
     $this->assertDatabaseMissing('users', [
         'id' => $targetUser->id,
     ]);
+});
+
+test('user seeder properly creates admin and staff users in database', function () {
+    $this->seed(UserSeeder::class);
+
+    $this->assertDatabaseHas('users', [
+        'email' => 'admin@laporan.com',
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+
+    $this->assertDatabaseHas('users', [
+        'email' => 'staff@laporan.com',
+        'role' => 'staff',
+        'is_active' => true,
+    ]);
+});
+
+test('seeded admin account can login successfully and access dashboard', function () {
+    $this->seed(UserSeeder::class);
+
+    $response = $this->post(route('login.store'), [
+        'email' => 'admin@laporan.com',
+        'password' => 'admin123',
+    ]);
+
+    $response->assertRedirect(route('sales.index'));
+    $this->assertAuthenticated();
+
+    $admin = User::where('email', 'admin@laporan.com')->first();
+    expect($admin->isAdmin())->toBeTrue();
+});
+
+test('app create admin command creates or updates admin account in database', function () {
+    $this->artisan('app:create-admin', [
+        '--name' => 'Super Admin',
+        '--email' => 'superadmin@laporan.com',
+        '--password' => 'supersecret123',
+    ])->assertSuccessful();
+
+    $this->assertDatabaseHas('users', [
+        'name' => 'Super Admin',
+        'email' => 'superadmin@laporan.com',
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+
+    $response = $this->post(route('login.store'), [
+        'email' => 'superadmin@laporan.com',
+        'password' => 'supersecret123',
+    ]);
+
+    $response->assertRedirect(route('sales.index'));
+    $this->assertAuthenticated();
 });
